@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>温馨提示</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: #000;
+        }
+        
+        
+        .tip-window {
+            position: fixed;
+            width: 320px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: '微软雅黑', 'Microsoft YaHei', sans-serif;
+            font-size: 22px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+            cursor: move;
+            z-index: 1000;
+            text-align: center;
+            padding: 15px 20px;
+            box-sizing: border-box;
+            opacity: 0;
+            transform: scale(0.9);
+            animation: smoothFadeIn 0.3s ease-out forwards;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+        
+        @keyframes smoothFadeIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 8px;
+            right: 10px;
+            background: rgba(255,255,255,0.8);
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            line-height: 22px;
+            text-align: center;
+            color: #333;
+            transition: all 0.2s ease;
+        }
+        
+        .close-btn:hover {
+            background: rgba(255,255,255,1);
+            transform: scale(1.1);
+        }
+        
+        #fullscreen-btn {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 25px 60px;
+            font-size: 24px;
+            font-weight: 600;
+            font-family: '微软雅黑', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 60px;
+            cursor: pointer;
+            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.5);
+            z-index: 10000;
+            transition: all 0.4s ease;
+            letter-spacing: 2px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        #fullscreen-btn::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(135deg, #667eea, #764ba2, #f093fb, #f5576c);
+            border-radius: 60px;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            filter: blur(10px);
+        }
+        
+        #fullscreen-btn:hover::before {
+            opacity: 1;
+        }
+        
+        #fullscreen-btn:hover {
+            transform: translate(-50%, -50%) scale(1.08) translateY(-3px);
+            box-shadow: 0 15px 50px rgba(102, 126, 234, 0.7);
+        }
+        
+        #fullscreen-btn:active {
+            transform: translate(-50%, -50%) scale(1.02);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <button id="fullscreen-btn" onclick="startTips()">LY</button>
+
+    <script>
+        const tips = [
+            '多喝水哦~', '保持微笑呀', '每天都要元气满满',
+            '记得吃水果', '保持好心情', '好好爱自己',
+            '梦想成真', '期待下一次见面', '天天开心',
+            '顺顺利利', '早点休息', '愿所有烦恼都消失',
+            '别熬夜', '今天过得开心嘛', '天冷了，多穿衣服',
+            '加油，你是最棒的', '心想事成', '天真烂漫',
+            '万事如意', '平安喜乐', '实现自我',
+            '身体健康', '霉运退退退', '工作顺利',
+            '笑口常开'
+        ];
+        
+        const bgColors = [
+            '#FFB6C1', '#87CEEB', '#90EE90', '#E6E6FA',
+            '#FFFFE0', '#DDA0DD', '#FF7F50', '#FFE4C4',
+            '#7FFFD4', '#FFE4E1', '#F0FFF0', '#FFF0F5', '#FDF5E6'
+        ];
+        
+        let interval = null;
+        let tipWindows = []; // 存储所有窗口的数组
+        const maxWindows = 300; // 最大窗口数量
+        
+        function getRandomPosition() {
+            const screenWidth = window.innerWidth;
+            const screenHeight = window.innerHeight;
+            const windowWidth = 320;
+            const windowHeight = 80;
+            
+            const x = Math.floor(Math.random() * (screenWidth - windowWidth));
+            const y = Math.floor(Math.random() * (screenHeight - windowHeight));
+            
+            return { x, y };
+        }
+        
+        function getRandomItem(array) {
+            return array[Math.floor(Math.random() * array.length)];
+        }
+        
+        function createTipWindow() {
+            const tip = getRandomItem(tips);
+            const bgColor = getRandomItem(bgColors);
+            const position = getRandomPosition();
+            
+            const tipDiv = document.createElement('div');
+            tipDiv.className = 'tip-window';
+            tipDiv.style.left = position.x + 'px';
+            tipDiv.style.top = position.y + 'px';
+            tipDiv.style.backgroundColor = bgColor;
+            tipDiv.innerHTML = `
+                ${tip}
+                <button class="close-btn" onclick="removeTipWindow(this.parentElement)">×</button>
+            `;
+            
+            // 拖拽功能
+            let isDragging = false;
+            let currentX, currentY, initialX, initialY;
+            
+            tipDiv.addEventListener('mousedown', (e) => {
+                if (e.target.className !== 'close-btn') {
+                    isDragging = true;
+                    initialX = e.clientX - position.x;
+                    initialY = e.clientY - position.y;
+                }
+            });
+            
+            document.addEventListener('mousemove', (e) => {
+                if (isDragging) {
+                    e.preventDefault();
+                    currentX = e.clientX - initialX;
+                    currentY = e.clientY - initialY;
+                    tipDiv.style.left = currentX + 'px';
+                    tipDiv.style.top = currentY + 'px';
+                }
+            });
+            
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+            
+            document.body.appendChild(tipDiv);
+            
+            // 添加到窗口数组
+            tipWindows.push(tipDiv);
+            
+            // 如果超过最大数量，删除最早的窗口
+            if (tipWindows.length > maxWindows) {
+                const oldestWindow = tipWindows.shift(); // 移除数组第一个元素
+                if (oldestWindow && oldestWindow.parentNode) {
+                    oldestWindow.remove(); // 从DOM中删除
+                }
+            }
+        }
+        
+        // 手动删除窗口时也要从数组中移除
+        function removeTipWindow(element) {
+            const index = tipWindows.indexOf(element);
+            if (index > -1) {
+                tipWindows.splice(index, 1);
+            }
+            element.remove();
+        }
+        
+        function startTips() {
+            // 清空之前的窗口记录
+            tipWindows = [];
+            
+            // 隐藏按钮
+            document.getElementById('fullscreen-btn').style.display = 'none';
+            
+            // 进入全屏
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen();
+            }
+            
+            // 创建窗口（无限循环）
+            interval = setInterval(() => {
+                createTipWindow();
+            }, 30);
+        }
+        
+        // 监听键盘按键，按任意键退出全屏并暂停弹窗
+        document.addEventListener('keydown', (e) => {
+            // 退出全屏
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            }
+            
+            // 暂停弹窗
+            if (interval) {
+                clearInterval(interval);
+                interval = null;
+            }
+            
+            // 显示按钮
+            document.getElementById('fullscreen-btn').style.display = 'block';
+        });
+        
+        // 退出全屏时显示按钮
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement) {
+                document.getElementById('fullscreen-btn').style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
+
